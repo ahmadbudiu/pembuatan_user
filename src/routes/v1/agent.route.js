@@ -1,6 +1,7 @@
 const express = require('express');
 const { body } = require('express-validator');
 const agentController = require('../../controllers/agent.controller');
+const redisMiddleware = require('../../middlewares/redis.middleware');
 
 const router = express.Router();
 
@@ -17,7 +18,7 @@ router.post(
 );
 
 router.get('/', agentController.getAllMasterAgents);
-router.get('/:masterId', agentController.getOneMasterAgent);
+router.get('/:masterId', redisMiddleware, agentController.getOneMasterAgent);
 
 router.patch(
     '/:masterId',
@@ -44,7 +45,7 @@ router.post(
 );
 
 router.get('/:masterId/agents', agentController.getAllAgentsByMaster);
-router.get('/:masterId/agents/:agentId', agentController.getOneAgentByMaster);
+router.get('/:masterId/agents/:agentId', redisMiddleware, agentController.getOneAgentByMaster);
 
 router.patch(
     '/:masterId/agents/:agentId',

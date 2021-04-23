@@ -2,6 +2,7 @@ const { validationResult } = require('express-validator');
 const db = require('../config/db.config');
 const ResponseHelper = require('../helpers/response.helper');
 const GeneralHelper = require('../helpers/general.helper');
+const RedisHelper = require('../helpers/redis.helper');
 
 const Player = db.players;
 const Agent = db.agents;
@@ -56,6 +57,7 @@ exports.getOne = async (request, response) => {
         return (new ResponseHelper(response)).error(false, 403 , undefined, 'You cannot access this resource');
     }
     const player = await Player.findOne({ where: { agent_id: agentId, id: playerId } });
+    RedisHelper.set('az-' + request.originalUrl, player);
     return (new ResponseHelper(response)).success(player);
 };
 
@@ -80,7 +82,8 @@ exports.update = async (request, response) => {
         if (! player) {
             return (new ResponseHelper(response)).error(false, 404 , undefined, 'Data not found');
         }
-        player.update(request.body);
+        await player.update(request.body);
+        RedisHelper.delete('az-' + request.originalUrl);
         return (new ResponseHelper(response)).success(player);
     } catch (error) {
         console.log(error);

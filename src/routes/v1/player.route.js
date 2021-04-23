@@ -1,6 +1,7 @@
 const express = require('express');
 const { body } = require('express-validator');
 const playerController = require('../../controllers/player.controller');
+const redisMiddleware = require('../../middlewares/redis.middleware');
 
 const router = express.Router({mergeParams: true});
 
@@ -12,7 +13,7 @@ router.post(
 );
 
 router.get('/', playerController.getAll);
-router.get('/:playerId', playerController.getOne);
+router.get('/:playerId', redisMiddleware, playerController.getOne);
 
 router.patch(
     '/:playerId',

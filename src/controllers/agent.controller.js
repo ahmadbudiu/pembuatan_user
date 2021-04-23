@@ -2,6 +2,7 @@ const { validationResult } = require('express-validator');
 const db = require('../config/db.config');
 const ResponseHelper = require('../helpers/response.helper');
 const GeneralHelper = require('../helpers/general.helper');
+const RedisHelper = require('../helpers/redis.helper');
 
 const Agent = db.agents;
 
@@ -32,6 +33,8 @@ exports.getAllMasterAgents = async (request, response) => {
 exports.getOneMasterAgent = async (request, response) => {
     const { masterId } = request.params;
     const master = await Agent.findOne({ where: { id: masterId, role: 'master' } });
+
+    RedisHelper.set('az-' + request.originalUrl, master);
     return (new ResponseHelper(response)).success(master);
 };
 
@@ -48,6 +51,7 @@ exports.updateMasterAgent = async (request, response) => {
             return (new ResponseHelper(response)).error(false, 404 , undefined, 'Data not found');
         }
         await master.update(request.body);
+        RedisHelper.delete('az-' + request.originalUrl);
         return (new ResponseHelper(response)).success(master);
     } catch (error) {
         console.log(error);
@@ -91,6 +95,7 @@ exports.getOneAgentByMaster = async (request, response) => {
     const { masterId } = request.params;
     const { agentId } = request.params;
     const agent = await Agent.findOne({ where: { parent_id: masterId, id: agentId, role: 'agent' } });
+    RedisHelper.set('az-' + request.originalUrl, agent);
     return (new ResponseHelper(response)).success(agent);
 };
 
@@ -109,6 +114,7 @@ exports.updateAgent = async (request, response) => {
         }
 
         await agent.update(request.body);
+        RedisHelper.delete('az-' + request.originalUrl);
         return (new ResponseHelper(response)).success(agent);
     } catch (error) {
         console.log(error);
